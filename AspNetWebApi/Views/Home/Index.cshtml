@@ -1,0 +1,179 @@
+﻿<h2>Mvc Ürün Yönetimi</h2>
+<hr />
+
+<table style="width:100%;">
+    <tr><td>Ürün Adı</td><td>Ürün Fiyatı</td><td>Stok Miktarı</td></tr>
+    <tr>
+        <td> <input id="UrunAdi" type="text" class="form-control" /></td>
+        <td> <input id="UrunFiyati" type="number" class="form-control" /></td>
+        <td> <input id="StokMiktari" type="number" class="form-control" /></td>
+    </tr>
+    <tr>
+
+        <td colspan="3">
+            <input id="Id" type="hidden" />
+            <input id="btnCreate" type="button" value="Ekle" class="btn btn-primary" />
+            <input id="btnUpdate" type="button" value="Güncelle" class="btn btn-success" />
+        </td>
+
+    </tr>
+</table>
+<hr />
+<div id="ajax-loader" class="d-flex justify-content-center d-none">
+    <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+    </div>
+</div>
+
+<div id="bilgilendirme" class="alert alert-info"></div>
+
+<ul id="products" class="list-group"></ul>
+
+
+
+@section Scripts{
+    <script>
+
+        function LoadProducts() {
+            var ul = $("#products");
+            ul.empty();
+
+            $.ajax({
+                method: "GET",
+                url: "/api/Products",
+                dataType: "json",
+                beforeSend: function () {
+                    $("#ajax-loader").removeClass("d-none");
+                },
+                complete: function () {
+                    $("#ajax-loader").addClass("d-none");
+                   
+                }
+            }).done(function (response) {
+                if (response == null) return;
+
+                for (var i = 0; i < response.length; i++) {
+                    var urun = response[i];
+                    var li = $("<li>Id:" + urun.Id + " Ürün Adı:" + urun.UrunAdi + " Ürün Fiyatı:" + urun.UrunFiyati + " Stok Adedi:" + urun.StokMiktari + "<input onclick='GetProduct(" + urun.Id + ")' type='button' value='Düzenle' /><input onclick='RemoveProduct(" + urun.Id + ")' type='button' value='Sil' /></li>");
+                    ul.append(li);
+                }
+
+            });
+        };
+        function CreateProduct() {
+            var UrunAdi = $("#UrunAdi").val();
+            var UrunFiyati = $("#UrunFiyati").val();
+            var StokMiktari = $("#StokMiktari").val();
+
+            var urun = {
+                "UrunAdi": UrunAdi,
+                "UrunFiyati": UrunFiyati,
+                "StokMiktari": StokMiktari
+            };
+            $.ajax({
+                method: "POST",
+                url: "/api/Products",
+                dataType: "json",
+                data: urun,
+                beforeSend: function () {
+                    $("#ajax-loader").removeClass("d-none");
+                },
+                complete: function () {
+                    $("#ajax-loader").addClass("d-none");
+                },
+                success: function () {
+
+                    LoadProducts();
+                    $("#bilgilendirme").html("Ürün Eklendi");
+                }
+            }).done(function (response) {
+                if (response == null) return;
+
+            });
+        };
+        function GetProduct(id) {
+            $.ajax({
+                method: "GET",
+                url: "/api/Products/" + id,
+                dataType: "json",
+                beforeSend: function () {
+                    $("#ajax-loader").removeClass("d-none");
+                },
+                complete: function () {
+                    $("#ajax-loader").addClass("d-none");
+                }
+            }).done(function (response) {
+                if (response == null) return;
+
+                var urun = response;
+                $("#Id").val(urun.Id);
+                $("#UrunAdi").val(urun.UrunAdi);
+                $("#UrunFiyati").val(urun.UrunFiyati);
+                $("#StokMiktari").val(urun.StokMiktari);
+            }).fail(function () {
+                alert("Hata Oluştu");
+            });
+        }
+        function UpdateProduct() {
+            var Id = $("#Id").val();
+            var UrunAdi = $("#UrunAdi").val();
+            var UrunFiyati = $("#UrunFiyati").val();
+            var StokMiktari = $("#StokMiktari").val();
+
+            var urun = {
+                "Id": Id,
+                "UrunAdi": UrunAdi,
+                "UrunFiyati": UrunFiyati,
+                "StokMiktari": StokMiktari
+            };
+            $.ajax({
+                method: "PUT",
+                url: "/api/Products/" + Id,
+                dataType: "json",
+                data: urun,
+                beforeSend: function () {
+                    $("#ajax-loader").removeClass("d-none");
+                },
+                complete: function () {
+                    $("#ajax-loader").addClass("d-none");
+                },
+                success: function () {
+                    $("#bilgilendirme").html("Ürün Güncellendi");
+                    LoadProducts();
+
+
+                }
+            }).done(function (response) {
+                if (response == null) return;
+
+            });
+        };
+        function RemoveProduct(id) {
+            $.ajax({
+                method: "DELETE",
+                url: "/api/Products/" + id,
+                beforeSend: function () {
+                    $("#ajax-loader").removeClass("d-none");
+                },
+                complete: function () {
+                    $("#ajax-loader").addClass("d-none");
+                }
+            }).done(function (response) {
+                if (response == null) return;
+                LoadProducts();
+                $("#bilgilendirme").html("Ürün Silindi");
+
+            }).fail(function () {
+                alert("Hata Oluştu");
+            });
+        }
+
+        $(function () {
+            LoadProducts();
+            $("#btnCreate").click(CreateProduct);
+            $("#btnUpdate").click(UpdateProduct);
+
+        });
+
+    </script>
+}
